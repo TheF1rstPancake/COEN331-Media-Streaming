@@ -1,0 +1,262 @@
+\documentclass[12pt]{article}
+
+\usepackage{url}
+\usepackage{cite}
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+
+\begin{document}
+\title{COEN 331: Video Streaming}
+\author{Giovanni Briggs}
+
+\maketitle
+
+\begin{abstract}
+Over the course of the evolution of the internet, being able to communicate with and view videos has become increasingly important. On-demand video streaming services such as Netflix, YouTube, and Hulu to live streaming communication with applications like Skype and Google Hangouts, all require special protocols to ensure strong Quality of Service in their applications.  These services continue to rise in popularity and there are still many optimizations that could be made to improve the way that video is streamed.
+
+\end{abstract}
+\clearpage
+
+\tableofcontents
+\clearpage
+
+\listoffigures
+\clearpage
+
+\section{Audience}
+This paper is intended for people who have a basic familiarity with WLAN 802.11 and Ethernet 802.3 standards.  It attempts to identify the importance of video streaming while also discussing previous and current technologies used to achieve good quality of service (QoS).  This paper will examine several companies that specialize in both on-demand video streaming and live streaming video and identify the unique challenges and issues that present themselves with this two different types of services.
+
+This paper provides a general overview and is meant for people who want a general understanding of how these services work, and future improvements that can be made with a focus on how video streaming works with the 802.11 standard.
+
+\section{Introduction}
+Video streaming has become one of the most popular uses of the interent today.  According to studies conducted by Cisco, video streaming is the accounts for a majority of internet traffic.  Globally as a whole, video traffic will be 82 percent of all IP traffic (both business and consumer) by 2020, up from 70 percent in 2015 \cite{ciscozetabyte}.  On mobile, video streaming accounts for about 55 percent of all mobile data and Cisco expects that amount to climb to 70 percent by 2020 \cite{cisconetworkindex}.  With the high demand for video content, many companies have risen to provide it.  Netflix, Hulu and YouTube are examples of on-demand streaming services.  On demand streaming services focus on providing high quality videos that have been previously recorded.  Live streaming services, such as Amazon's Twitch and Microsoft's Skype, focus on providing video content at real-time.  Both types of services; however, are delivering large volumes of data to their users, and are constantly pushing the quality of the content. As seen in Figure \ref{fig:videostreamingdist}, the volume of HD and 4K video is continuously increasing.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.9]{vni-hyperconnectivity-wp_6}
+    \caption{Measurements of the how much traffic different types of video streaming generate.}
+    \label{fig:videostreamingdist}
+  \end{center}
+\end{figure}
+
+With this volume of data, video streaming, and streaming media in general, require special standards.  At the physical and media access control (MAC) layers of the network, the 802.11 standard does not provide a way to enable and gauarantee a level of quality of service for an application. At an application layer, the Hyper Text Transport Protocol (HTTP) was not initially designed to handle media streaming.  To address the QoS issues with 802.11, the 802.11e standard was created and there have been many improvements to HTTP to better support media streaming.  Other protocols such as Real Time Messaging Protocol (RTMP) and the Real Time Streaming Protocol (RTSP) are designed specifically for streaming media and attempt to make up for many of HTTP's shortcomings
+
+Section I focuses on how wireless networks manage quality of service, which is an important aspect of managing video streams for mobile devices.  Section II outlines several different protocols used in streaming media including HTTP Adaptive Bit Rate, Real Time Streaming Protocol, and Real Time Messaging Protocols.  Section III examines the unique challenges of streaming media over wireless networks inclduing WLAN and 4G.  Section IV will examine upcoming new technologies designed to improve the process of streaming media over wireless networks and generating live streams from mobile devices.
+
+\section{802.11e: Managing QoS}
+802.11e is an ammendment to the Wireless Local Area Network 802.11 standard and is designed to provide quality of serivce (QoS) enhancements.  In order to provide a certain QoS, certain application types need to be given priority over others \cite{Thottan:2006:IEM:1234161.1234187}.
+
+Legacy 802.11 defined two types of protcols - Distributed Coordination Function (DCF) and Point Coordination Function (PCF).  Figure \ref{fig:dcf} shows how a station gains access to a medium using DCF.  When a station wants to gain control of the medium, it must first listen to see if anyone else is communicating on the channel first.  If two devices try and communicate at the same time, they will cause a collision and neither station's data will get through. If the channel is busy, then the station will set a random backoff timer and wait for the channel to be free for a certain period of time defined as a DFC iterframe space (DIFS).  The backoff timer is added to the end of the DIFS and attempts to ensure that only one device uses the channel at a time.  Once the channel is clear for a DIFS, each station's backoff timer begins to countdown.  When a station's timer reaches 0, they seize control of the channel and begin to broadcast their data \cite{Thottan:2006:IEM:1234161.1234187}.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.5]{dcf}
+    \caption{Diagram of network communication using a distributed coordination function.}
+    \label{fig:dcf}
+  \end{center}
+\end{figure}
+
+The issue here again is that every station has the same random chance to access the medium and there is no way for differentiate between the types of data that these stations want to send and receive.  802.11e offers traffic prioritization and improved channel access over 802.11.  802.11e relies on the Hybird Coordination Function (HCF) to support QoS.  HCF is comprised of two main parts - Enhanced Distributed Channel Access and  HCF Controlled
+Channel Access (HCCA).  HCCA is not used in any devices, but EDCA is \cite{Thottan:2006:IEM:1234161.1234187}.  EDCA works very similarly to DCF and is shown in Figure \ref{fig:edca}.  EDCA defines eight User Priorities and four Acccess Categories.  Each User Priority is mapped to exactly one Access Category.  The User Priorities range from 0 to 7, with 7 being the highest priority.  The Access Categories are labelled as background task traffic, best effort traffic, video traffic and voice traffic, with background task traffic being the lowest priority and voice traffic being the highest.  EDCA also defines a Arbitrary Inter-Frame Space (AIFS) and a contention window (CW).  The AIFS is similar to a DIFS and is the idle time slot after sending a packet and a given contention window.  The AIFS and CW are different for different priority levels.  Stations that have a higher priority are given a smaller AIFS and CW than stations with a lower priority \cite{7434292}.  In other words, voice traffic is given a shorter AIFS and CW than background task traffic.  This allows voice traffic to be placed on the channel before background task traffic and give voice traffic a better, more consistent QoS than background task traffic.  In Figure \ref{fig:edca} AIFS[AC3] would be voice traffic versus AIFS[AC1] which is best effort traffic.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.75]{edca}
+    \caption{Diagram of network communication using enhanced distribution channel access.}
+    \label{fig:edca}
+  \end{center}
+\end{figure}
+
+While EDCA establishes some level of QoS, it does not explictly guarantee that highest priority traffic will always have access to the channel when required \cite{Thottan:2006:IEM:1234161.1234187}.  This is not an issue for on-demand streaming applications, since they can afford to wait for video to buffer on a device \cite{ciscoqos}.  This proves problematic for real-time applications \cite{5336865} however, the EDCA provides good enough QoS for most applications.
+
+\section{Media Streaming Protocols}
+
+\subsection{HTTP Adaptive-Bit-Rate Streaming}
+While 802.11e provides video and voice traffic higher priority on a network in order to provide a certain level of QoS for these traffic types, it is not enough.  There are several application layer protocols and techngiques designed to help optimize video streaming over the internet, one such technique is the HTTP Adaptive-Bit-Rate Streaming (HTTP ABR) protocol.
+
+The HTTP ABR technique allows bit rates to be changed dynamically to adapt to network, client or server conditions \cite{7380453}.  Figure \ref{fig:httpabr_overview} shows the overall concept of an HTTP ABR system. With adpative streaming, the server provides the client with a list of URLs.  Each URL is a different chunk of the media that is encoded at a different quality.  The client will then pick the appropriate URL based on the content that it needs, and based on performance factors such as the available bandwidth, dropped frames and download rate \cite{httpabrtutorial}\cite{7057917}. Clients operating over a wireless network are particular susceptible to changes in these parameters.  Collisions over the channel and the fact that the client has the possibility of moving between access points makes managing streaming over WLAN trickier to manage \cite{10204452020150501}.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.6]{httpabr_overview}
+    \caption{Overview of an HTTP ABR system}
+    \label{fig:httpabr_overview}
+  \end{center}
+\end{figure}
+
+Figure \ref{fig:httpabr_arch} illustrates the overall process of connecting to an HTTP ABR based server and receiving content.  The client connects to the server and requests a list of all available URLs for the media it wants to download.  It will then start the download at the lowest quality in order to start the process more quickly.  The client measures the download rate of this first media chunk and since the client knows the duration
+of the chunk and the amount of data in the chunk, the client can calculate the current speed of the network. Based on the speed of the network, the client can choose to increase the quality of the video if the client thinks it can download higher quality content before the current chunk finishes playing back. The client continues to buffer content and that content is played back to the user.  The client recalculates the speed of the network after each chunk and will update the quality of the stream accordingly \cite{5986186}.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.4]{httpabr_arch}
+    \caption{Demonstration of adaptive streaming connection to client}
+    \label{fig:httpabr_arch}
+  \end{center}
+\end{figure}
+
+The amount of data the client stores in it's buffer depends on whether or not the stream is transferring on-demand content or live-stream content.  With live-stream content, the buffer is relatively small in order to make sure that the playback is as close to real time as possible.  The stream should have at least one chunk more than is currently available in the case of network issues, but for on-demand streams, the buffer can be much larger because all of the content has already been generated \cite{5986186}.
+
+
+Figure \ref{fig:httpabr} illustrates how the difference in available bandwidth impacts the quality of the video stream over time.  As the network bandwidth becomes more congested, the client downgrades to lower video quality.  This allows the client to keep streaming and buffering data so that the stream is not interupted, and when the client detects a lower load on the network (higher available badwitdh), it will begin to stream higher quality video content again.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.25]{httpabr}
+    \caption{Demonstration of adaptive streaming}
+    \label{fig:httpabr}
+  \end{center}
+\end{figure}
+
+
+Even the way in which a client makes these requests has to be carefully thought out.  With streaming media, it is the client's responsibility to buffer the next segment before the current one runs out.  If the client fails to do this, the playback stops, resulting in a less than ideal user experience.  Figure \ref{fig:bufferingvideo} shows how the timing works out.  The client downloads the first chunk at the lowest bitrate at \textit{r0}.  This allows the client to start this process the fastest.  All of the content is downloaded at the time marked by \textit{d0}, and playback of the data begins at \textit{t1}.  Before the playback begins however, the client will request the next segment at \textit{r1}, and it will request the next chunk based on how quickly it was able to download the first chunk of video.  The next chunk should be downloaded sometime in the middle of the playback of the chunk received at \textit{d0}, and the process repeats.  The client will continue downloading chunks of the video stream at the appropriate quality based on the current quality of the stream, and it always tries to stay ahead of the current playback \cite{Tanwir201674}.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.9]{bufferingvideo}
+    \caption{Client streaming media process}
+    \label{fig:bufferingvideo}
+  \end{center}
+\end{figure}
+
+It is also important to make a distinction between on-demand video streaming and live streaming.  With on-demand video streaming (also referred to as "playback streaming"), all of the content has already been generated whereas live streams are generating and encoding content in the moment \cite{Kazantzidis02adaptivemultimedia}.  This means that there is a delay in live streaming between when the content is created and then when it is sent to the client.  There are many proprietary protocols that try and minimize this delay time as much as possible \cite{Tanwir201674}, because the whole point to live streaming is to be able to have it be as close to real time as possible.  Also, in live streaming the process demonstrated in \ref{fig:bufferingvideo} can only download so many chunks ahead of the current playback.  This means live streaming is more susceptible to pausing if the there are changes in the network conditions.  For this reason, live streaming applications generally require more strict network requirements \cite{Kazantzidis02adaptivemultimedia}.
+
+\subsubsection{Calculating Available Bandwidth}
+The entire premise of HTTP ABR is that you can reliable predict the available bandwidth on the network.  An inability to accurately measure the avaialble bandiwdth could result in the client selecting a higher bitrate than it can actually manage.  This could result in the current playback catching up with the buffer and causing the user to have to wait until more content can be downloaded, which results in a less than ideal user experience.
+
+There are many ways to calculate the available bandwidth on the network, but one way has traditional been used in most systems. In several HTTP ABR systems, available-bandwidth measures are calculated with the segment fetch time and segment size \cite{7057917}.  Since the client knows the size of the chunk it received and how much video is contained in that chunk, it can effectively calculate how much time it has to download the next chunk before the current one completes playback.  It also can caluclate the speed of the network based on how much data was in the last packet and how long it took to download.  However, this process does not take into account, the TCP slow start characteristics \cite{7057917}.  Slow-start is a congestion control algorithm that is built into TCP.  It is designed to make sure that a server is not sending more data than the network is capable of transmitting in order to avoid network congestion \cite{rfc5681}.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.5]{tcp_slow_start}
+    \caption{Problem of traditional bandwidth measurement caused by TCP slow start}
+    \label{fig:tcp_slow_start}
+  \end{center}
+\end{figure}
+
+Even if the client knows it can request data at a certain rate, the underlying TCP protocol may actually deliver data at a slower rate than what the client requested which could result in the current chunk completing its playback before the client was able to fully load the next chunk.  Either that, or the TCP slow start could cause the client to estimate that the available bandwidth is much lower than it actually is.  While the client will be able to load all of the data, it may be loading data at a lower quality than required, which still results in a sub-optimal user experience \cite{7057917}.
+
+As Figure \ref{fig:tcp_slow_start} shows the traditional bandwidth measurement method.  If the network conditions are the same, a segment file transfer occurs. \textit{s1} and \textit{s2} are the segments that have been encoded at different quality.  \textit{t1} and \textit{t2} are the two times at which \textit{s1} and \textit{s2} sucessfully finish downloading respectively. \textit{B(s1)} and \textit{B(s2)} are the bandwidths measured at \textit{s1} and \textit{s2}, or in other words, the bandwidths at the moment with that \textit{s1} and \textit{s2} finish downloading.  As shown in the graph, even though the network conditions didn't change, the available bandwidth was constant over both segments, the time it took to download each segment varries greatly \cite{7057917}.
+
+While there have been many other proposed algorithms, adoption of them has been low \cite{6698072}\cite{7057917}.  The traditional method is very easy to implement and while it is not optimal, it is able to quickly determine the available bandwidth on the network.
+
+\subsection{Real Time Streaming Protocol}
+The Real Time Streaming Protocol (RTSP) is another protocol other than HTTP that is used to enable media streaming.  RTSP was specifically designed for use in entertainment and streaming media and it provides an extensible framework that works with both on-demand and live streaming.  RTSP focuses on session management for media recording and playback and generally makes use of the Real-time Transport Protocol (RTP) but it does not have to and can work in conjunction with any other web-based protocols \cite{rtsp_ieee}.  Since RTSP's focus is on media streaming, it differs from HTTP in many ways.  Figure \ref{fig:rtsp_arch} shows a very high level architecture of RTSP.  First, the client must reach out to a server, and that server will send it back the location of the RTSP server.  The client makes a new connection to that server in order to begin receiving content.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.5]{rtsp_arch}
+    \caption{RTSP architecture}
+    \label{fig:rtsp_arch}
+  \end{center}
+\end{figure}
+
+Within RTSP, there are four states - setup, play, pause and teardown.  During setup, the RTSP server allocates resources for a stream.  The play state is rather self explanatory - it is when the server begins sending media to the client.  The pause state tells the server to stop sending data, but not to free the resources that it as allocated for the stream.  Finally, the teardown state is when all resources are freed \cite{rtsp_ieee}.  The fact that RTSP has states is a major difference from HTTP, which is a stateless protocol.  RTSP also differs from HTTP because both the client and server can make requests of eachother.  In HTTP, the client makes requests, and the server simply responds with data.
+
+The RTSP states are illustrated in Figure \ref{fig:rtsp_states}.  As long as the client and server are in the \textit{play} state, data will be sent to the client.  As soon as a \textit{pause} happens, the video streaming halts.  Pauses must be temporary though.  If the stream is paused for too long, the server will terminate the connection and free the resources.  Once the client and server come out of \textit{pause} and enter the \textit{play} state again, the video will pick up from where it left off.  However, both the \textit{pause} and \textit{play} messages allow for time ranges that allow the client to specify where in the stream it wants to pause and play from \cite{rtsp_ieee}
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.5]{rtsp_states}
+    \caption{RTSP architecture}
+    \label{fig:rtsp_states}
+  \end{center}
+\end{figure}
+
+Within RTSP's \textit{play} state is a very similar state called \textit{record}.  The \textit{record} state is used by clients who want to record media on their device, rather than consume data.  The client specifies a URL where it wants to recording to be saved, and that recording can then be accessed by devices that want to stream the recording.  Devices can also be recording and playing at the same time which enables the use of RTSP for applications such as video-conferencing, where each client participating needs to be able to view the content recorded by others, while also recording their own \cite{rtsp_ieee}
+
+\subsubsection{Real-Time Transport Protocol (RTP)}
+While RTSP can work with a wide range of other protocols, it is most often used in conjuction with the Real Time Transport Protocol (RTP).  RTP provides end-to-end network transport functions suitable for applications transmitting real-time data, such as audio, video or simulation data, over multicast or unicast network services \cite{schulzrinne_casner_frederick_jacobson_2003}.
+
+RTP is built on top of UDP which is a significant difference from HTTP which utilizes TCP.  The key difference here is that TCP guarantees that all packets will reach their final destination whereas UDP does not make that promise.  UDP makes sense for streaming media applications because of the large volume of data that streaming media generates.  If we were to use TCP, lost packets would have to be retransmitted, which could cause more congestion on the network.; whereas, with UDP the lost packets are simply skipped over.  For a streaming application, this allows the playback to continue and skip over content without having to wait for retransmission.  RTP does however place sequence numbers and timing information so that the client can reconstruct the media.  The underlying network protocols do not guarantee that packets will be received in order, so RTP has to contain this information in order to ensure that the client can rebuild the media stream \cite{schulzrinne_casner_frederick_jacobson_2003}.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.5]{rtp}
+    \caption{Real-Time Transport Protocol}
+    \label{fig:rtp}
+  \end{center}
+\end{figure}
+
+Figure \ref{fig:rtp} illustrates the process of sending RTP packets on top of UDP \cite{zurawski_2005}.  The client encodes the media and packs it into an RTP packet which is then uses UDP to transport the packet to the destination, which then uses the header information in the RTP packet to decode the packet and place it in the correct part of the stream. It should also be noted that audio and video are sent as two seperate RTP streams and it is up to the client to maintain synchronization between them, which is achieved by matching the timestamps between the two streams.
+
+Using RTSP and RTP together provides a way for applications to be able to handle both on demand and live streaming of content.
+
+\subsection {Real Time Messaging Protocol (RTMP)}
+The Real Time Messaging Protocol was designed by Adobe and is built on top of TCP to provide carry parallel streams of video, audio, and data messages, with associated timing information, between clients \cite{rtmp_def}.
+
+Messages make up the basic building block of RTMP.  These messages are then handled by the RTMP Chunk Stream.  Each message has a different type assigned to it's header.  These types define what kind of information the message contains, such as audio, video or a command message.  Each chunk stream carries messages of one type from one message stream, and each chunk sent must be sent in it's entirety before the next chunk.  This chunking also allows for lower overhead, because much of the header information for the messages in the chunk can be compressed in the header of the chunk itself \cite{rtmp_def}.
+
+Figure \ref{fig:rtmp} shows how data is transmitted using RTMP.  After the client has established a connection with the RTMP server, the client sends a message indicating it wants a media stream.  At this point, the server tells the client what the size of the chunks will be.  This option is configurable based on the available bandwidth \cite{rtmp_def}.  The server than alerts the client that data is incoming, and then begins to send video and audio data via different RTMP Chunk Streams \cite{6469981}.  This data will continue to be consumed by the client until it terminates the connection.  The RTMP server also has the ability to change the bit rate of the available chunks, much like how HTTP ABR works.  RTMP servers store media at a range of qualities, and they can select the appropriate qualiy based on network conditions.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.35]{rtmp}
+    \caption{Real-Time Messaging Protocol}
+    \label{fig:rtmp}
+  \end{center}
+\end{figure}
+
+\subsection{HTTP ABR vs RTSP vs RTMP}
+Figure \ref{fig:transport_protocols_compared} gives a brief comparison between the different protocols \cite{transport_protocols}.  One of the major advantages to using and HTTP ABR based protocol, such as the Dynamic Streaming over HTTP (DASH) protocol, is that it works with all existing HTTP servers.  RTSP and RTMP require dedicated servers using the respective protocol and forces clients to interact with these servers using  special interface.  HTTP ABR protocols can simply leverage a company's existing HTTP servers.
+
+\begin{figure}[htb]
+  \begin{center}
+    \includegraphics[scale=0.5]{transport_protocols_compared}
+    \caption{Comparison of different transport protocols.}
+    \label{fig:transport_protocols_compared}
+  \end{center}
+\end{figure}
+
+
+It is also interesting to note that HTTP and RTMP run on TCP, which can have a significant impact on the performance of these protocols.  In particular, TCP’s inefficiency on wireless or heterogeneous networks results from the fact that its performance depends on strong assumptions with respect to the observed network state \cite{6336461}.  This gives RTP a significant advantage over HTTP ABR.  Also, HTTP ABR does not support multicasting \cite{7346220120120201}.  If you want to share the same content to a number of people, each person must connect to the HTTP server individually.  RTSP and RTMP do support multicasting which means that it can deliver a single feed to multiple users which is more effective than managing a large amount of unicast streams for the same content.
+
+While RTMP and RTSP appear to work very similarly, RTMP has a significant drawback - it requires a plug-in to work on browsers \cite{7346220120120201}.
+This plugin is generally the Flash plugin, and while it is free to download for web browsers, it still presents an extra step that users have to go through in order to setup their browser.  They also have to manage and update the plugin which places more overhead on the user than just using HTTP ABR or RTSP.
+
+\section{Challenges of Streaming Media over WLAN}
+Wireless networks come with a variety of challenges that traditional wired networks do not have to consider.  As discussed earlier in this paper, even being able to provide a reliable quality of service for clients is increasingly difficult in wireless networks.
+
+With a wired network, the client has a hardline connection to the internet.  Factors such as distance to an access point, obstacles in the path between the client and the access point, other devices also using the access point are not factors for wired networks, but they do present significant challenges for WLAN \cite{7146968}.  With respect to media streaming, packet loss has a major impact on the quality of the media.  As discussed earlier, RTSP uses UDP, so lost packets remain lost.  One study showed that packet loss rate of about 30 percent made the media impossible to understand.  Other studies have shown that a packet loss rate of 5 to 10 percent is enough to significantly degrade audio streams \cite{lantowlan}.  This is why WLAN neeeds standards like 802.11e to try and provide a consistent quality of service for wireless devices that are streaming media.
+
+More specific to mobile wireless networks, such as 3G and 4G, the streaming quality is limited by the wireless data rate \cite{wireless_stream_challenges}.  While HTTP ABR helps to address this problem, since the client can select an appropriate quality of media based on the available bandwidth, the available bandwidth isn't powerful enough to enable a very high quality in the first place.  While 4G and other WLAN technologies have greatly closed the gap between wireless and wired bandwidths, there are still other issues that plague wireless networks.  For example, fluctuations in the network are more common for wireless networks than wired networks.  Since a user might be moving while also streaming (for example, watching Netflix on a train ride), the user could be moving in between networks, each with a different load and available bandwidth.  Each of these factors can significantly impact the quality of the media stream \cite{wireless_stream_challenges}.
+
+Slighlty more problematic is that the networks were not necessarily originally designed for this type of use case.  HTTP ABR depends on the idea that the client can accurately predict the conditions of the network so that it can fetch the correct video quality.  However, there are still many factors that impact mobile network conditions such as the time and location varying network link conditions, device mobility, congestion in the wireless medium, random device arrival/departure which make it difficult to predict network conditions and therefore difficult for the client to select the correct video quality \cite{10287427420150501}.  Failure to correctly select the right video quality could potentially result in the device not being able to buffer video fast enough, and so the user could become stuck waiting for their device to gather more content.
+
+Not only can mobile devices not necesasrily accurately compute the current network usage, the basic schedulers that determine how much bandwidth a device is allowed can unfairly distribute bandwidth.  In cellular networks (such as 3G and 4G, not WLAN), the base station schedules flows of different users to achieve some notion of fair resource allocation across end user devices in a cell. However, these schedulers are designed for single bit-rate videos and they can’t handle multiple bit rates efficiently \cite{10287427420150501}.  In WLAN networks this issue is resolved by 802.11e, but in cellular networks, the access to the network is determined on a user by user basis, not by the type of content one user is accessing over another.
+
+While mobile devices can still rely on the use of HTTP ABR, RTSP or RTMP, some require more processing than others, which has a direct negative impact on battery life.  HTTP ABR in particular can hurt a mobile devices performance.  Segmenting the video into very small chunks adds time and additional processing power.  This generally has a greater negative impact on the device that is generating the content, than on the device receiving it \cite{11720476820160701}.
+
+This highlights another issue with video streaming on mobile devices - generating content is a costly activity.  Not only to people want to be able to view content on their mobile devices, but they also want to be able to share content from them.  Being able to reduce the battery power that mobile devices, especially smartphones, consume while streaming and viewing content is greatly beneficial in trying to meet user demand for more video content.
+
+\section{On Demand Video Streaming}
+On demand video streaming is an extremely popular use of the internet.  In 2011, Netflix alone accounted for 29.7 percent of the peak downstream traffic in the US.
+
+\subsection{Netflix}
+
+\subsection{Hulu}
+
+\subsection{YouTube}
+
+
+\section{Live Streaming Video}
+
+
+\subsection{Twitch}
+Twitch u ses RTMP
+for its stream s, and it can receive stream s from
+m obile devices too, although it does so from a
+sm artp h o n e’s cam era ra th e r th an an in-device
+gam e \cite{11720476820160701}
+
+\subsection{Skype}
+
+\section{Future Developments}
+
+\section{Conclusion}
+
+\clearpage
+\bibliography{bibliography}{}
+\bibliographystyle{plain}
+
+\end{document}

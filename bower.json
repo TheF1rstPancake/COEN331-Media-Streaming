@@ -1,19 +1,19 @@
 {
-  "name": "makenew-latex-project",
-  "version": "0.0.0",
-  "description": "LaTeX project skeleton.",
-  "main": "tex/makenew-latex-project.tex",
+  "name": "main",
+  "version": "",
+  "description": "COEN 331 term paper",
+  "main": "tex/main.tex",
   "authors": [
-    "Evan Sosenko <razorx@evansosenko.com>"
+    "Giovanni Briggs <gbriggs@scu.edu>"
   ],
   "keywords": [
     "latex"
   ],
-  "license": "Copyright 2016 Evan Sosenko",
-  "homepage": "https://github.com/makenew/latex-project",
+  "license": "Copyright  ",
+  "homepage": "https://github.com//",
   "repository": {
     "type": "git",
-    "url": "git://github.com/makenew/latex-project.git"
+    "url": "git://github.com//.git"
   },
   "private": true,
   "ignore": [
@@ -21,7 +21,6 @@
     "node_modules",
     "tex/components",
     "build",
-    "makenew.sh",
     "package.json"
   ]
 }
